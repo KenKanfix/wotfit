@@ -73,6 +73,22 @@ export const TECHNIQUE_CUES: Record<string, string> = {
     'Hang tall, lift straight legs to hip height, control the descent.',
   'toes-to-bar':
     'Hang from the bar, drive your toes to the bar, keep legs straight and control the swing.',
+  crunch:
+    'Press your lower back into the floor, curl your ribs toward your hips, and exhale at the top.',
+  'bicycle-crunch':
+    'Alternate elbow to opposite knee, keep your lower back down, and move slowly.',
+  'reverse-crunch':
+    'Bring your knees over your hips, curl your pelvis toward your ribs, and lower with control.',
+  'dead-bug':
+    'Keep your lower back flat as you extend the opposite arm and leg, then switch sides.',
+  superman:
+    'Lie face down, lift your arms and legs together, squeeze your glutes, and lower slowly.',
+  'side-plank':
+    'Stack your shoulders, hips, and feet, brace your side, and keep your hips lifted.',
+  'russian-twist':
+    'Lean back with a tall spine, rotate from your ribs, and keep your hips still.',
+  'mountain-climber':
+    'Hold a strong plank, drive one knee toward your chest, and alternate without bouncing your hips.',
   'wall-sit':
     'Back flat against the wall, thighs parallel to the floor, hold and breathe.',
   'glute-bridge':

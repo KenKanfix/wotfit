@@ -101,7 +101,18 @@ Last updated: 2026-11-07
    - Light mode overrides Tailwind CSS zinc/brand variables via `[data-theme="light"]`.
    - Theme is stored in localStorage for flash-free startup and updates the browser theme-color/status-bar meta tags.
 5. Verified with `npm run lint` and `npm run build`; both pass.
-   - Not redeployed yet. For Pages use `npm run build:pages`; for Android use `npm run build` before `npx cap sync android`.
+   - Deployed to GitHub Pages; the live bundle includes saved plans and the appearance toggle.
+   - For Android, use `npm run build` before `npx cap sync android`.
+
+## Session 2026-11-07 — Core exercise expansion
+
+1. Added eight bodyweight core movements: Crunch, Bicycle crunch, Reverse crunch, Dead bug, Superman, Side plank, Russian twist, and Mountain climber.
+   - Added technique cues for each movement.
+   - Added two-frame WebP illustrations under `public/exercises/`.
+2. Verified search results and image loading with a headless Chrome flow.
+   - Searching `crunch` returns Crunch, Bicycle crunch, Reverse crunch, and Cable crunch.
+   - Searching `superman` returns Superman and the 640x427 preview loads.
+   - `npm run lint` and `npm run build:pages` pass.
 
 ## Important build/deploy notes
 

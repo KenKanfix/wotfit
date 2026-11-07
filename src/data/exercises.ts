@@ -534,6 +534,57 @@ export const EXERCISES: Exercise[] = [
     repRange: [5, 10],
     incrementKg: 0,
   }),
+  ex('crunch', 'Crunch', 'core', 'bodyweight', ['core'], {
+    defaultRestSeconds: 60,
+    repRange: [12, 20],
+    incrementKg: 0,
+  }),
+  ex('bicycle-crunch', 'Bicycle crunch', 'core', 'bodyweight', ['core'], {
+    level: 2,
+    defaultRestSeconds: 60,
+    repRange: [10, 16],
+    incrementKg: 0,
+  }),
+  ex('reverse-crunch', 'Reverse crunch', 'core', 'bodyweight', ['core'], {
+    level: 2,
+    defaultRestSeconds: 60,
+    repRange: [10, 15],
+    incrementKg: 0,
+  }),
+  ex('dead-bug', 'Dead bug', 'core', 'bodyweight', ['core'], {
+    defaultRestSeconds: 60,
+    repRange: [8, 12],
+    incrementKg: 0,
+  }),
+  ex('superman', 'Superman', 'core', 'bodyweight', ['core'], {
+    secondaryMuscles: ['back', 'glutes'],
+    defaultRestSeconds: 60,
+    repRange: [10, 15],
+    incrementKg: 0,
+  }),
+  ex('side-plank', 'Side plank', 'core', 'bodyweight', ['core'], {
+    level: 2,
+    defaultRestSeconds: 60,
+    repRange: [20, 45],
+    incrementKg: 0,
+    isTimed: true,
+  }),
+  ex('russian-twist', 'Russian twist', 'core', 'bodyweight', ['core'], {
+    level: 2,
+    defaultRestSeconds: 60,
+    repRange: [12, 20],
+    incrementKg: 0,
+  }),
+  ex('mountain-climber', 'Mountain climber', 'core', 'bodyweight', [
+    'core',
+    'full_body',
+  ], {
+    goals: ['fat_loss', 'endurance', 'calisthenics'],
+    defaultRestSeconds: 45,
+    repRange: [20, 40],
+    incrementKg: 0,
+    isTimed: true,
+  }),
   ex('wall-sit', 'Wall sit', 'squat', 'bodyweight', ['quads'], {
     category: 'calisthenics',
     goals: ['endurance', 'fat_loss', 'calisthenics'],
