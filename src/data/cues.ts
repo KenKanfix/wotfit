@@ -89,6 +89,8 @@ export const TECHNIQUE_CUES: Record<string, string> = {
     'Lean back with a tall spine, rotate from your ribs, and keep your hips still.',
   'mountain-climber':
     'Hold a strong plank, drive one knee toward your chest, and alternate without bouncing your hips.',
+  'frog-sprawl-kick':
+    'Kick your feet back to a straight-arm plank, then jump them wide outside your hands into a deep squat. Keep your hips level and stand tall.',
   'wall-sit':
     'Back flat against the wall, thighs parallel to the floor, hold and breathe.',
   'glute-bridge':

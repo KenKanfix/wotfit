@@ -585,6 +585,17 @@ export const EXERCISES: Exercise[] = [
     incrementKg: 0,
     isTimed: true,
   }),
+  ex('frog-sprawl-kick', 'Frog sprawl kick', 'squat', 'bodyweight', [
+    'quads',
+    'glutes',
+  ], {
+    secondaryMuscles: ['core', 'shoulders', 'calves'],
+    goals: ['fat_loss', 'endurance', 'calisthenics'],
+    level: 2,
+    defaultRestSeconds: 60,
+    repRange: [8, 15],
+    incrementKg: 0,
+  }),
   ex('wall-sit', 'Wall sit', 'squat', 'bodyweight', ['quads'], {
     category: 'calisthenics',
     goals: ['endurance', 'fat_loss', 'calisthenics'],

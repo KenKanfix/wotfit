@@ -14,7 +14,7 @@ Last updated: 2026-11-07
 - Core workout tracking is functional; lint and builds pass.
 - PWA is live at `https://kenkanfix.github.io/wotfit/`; user confirmed access on 2026-11-07.
 - Play privacy policy: `https://kenkanfix.github.io/wotfit/privacy.html`.
-- GitHub Pages deploys from the `gh-pages` root; `main` still contains the old landing page and is not the live site.
+- GitHub Pages deploys the production build from the `gh-pages` root; `main` contains the app source and does not publish directly.
 - Android release AAB/APK are built and signed from the current source.
 - Play production upload is pending written Play support confirmation on personal vs organization account type.
 - Current app icon retained; face-swap previews are only in `icon-previews/` and are not used by the app.
@@ -26,7 +26,8 @@ Last updated: 2026-11-07
 - Rest timer with skip/+5 seconds, sound, vibration, notifications, and screen wake lock.
 - Double-progression suggestions based on completed session history.
 - Goal-based plan generation with equipment, experience level, and calisthenics progressions.
-- Exercise library with roughly 55 movements and bodyweight ladders.
+- Exercise library with 70 movements and bodyweight ladders.
+- Smart Plan editing: swap, remove, or add exercises before starting or saving.
 - History screen with completed sessions and set details.
 - Settings for goal, experience, equipment, units, sound, notifications, install, export, and reset.
 - PWA manifest, service worker, install prompt support, and Capacitor configuration.
@@ -114,11 +115,25 @@ Last updated: 2026-11-07
    - Searching `superman` returns Superman and the 640x427 preview loads.
    - `npm run lint` and `npm run build:pages` pass.
 
+## Session 2026-11-07 - Smart Plan editing and Frog sprawl kick
+
+1. Added `Frog sprawl kick` to the exercise library.
+   - Bodyweight plyometric movement, intermediate level, 8-15 reps, 60-second default rest.
+   - Primary quads and glutes; secondary core, shoulders, and calves.
+   - Added two-frame 640x427 WebP illustrations and a technique cue.
+2. Added editing controls to Smart Plan.
+   - Each planned exercise can be swapped or removed.
+   - `Add exercise` opens the existing searchable exercise picker.
+   - `Reset` restores the generated plan; `Shuffle` starts a fresh generated plan.
+   - Edited plans can still be saved, started, or added to an active session.
+3. Added a back button from Settings to Smart Plan when Settings was opened via the Plan screen's Edit action.
+4. Verified with `npm run lint`, `npm run build:pages`, and a headless Chrome flow covering swap, add, remove, reset, and Frog sprawl kick search.
+
 ## Important build/deploy notes
 
 - Android must be built from the root-base `dist`: run `npm run build` before `npx cap sync android`.
 - Do not run `npx cap sync android` against a Pages `dist` containing `/wotfit/` assets.
-- Current local `dist/` is the root/Android build. Regenerate Pages with `npm run build:pages` before redeploying.
+- The local `dist/` may be either build; run `npm run build:pages` before Pages deploys or `npm run build` before Android syncs.
 - To trigger Pages after source changes: `gh api --method POST repos/KenKanfix/wotfit/pages/builds`.
 - PowerShell may render the manifest title’s em dash as mojibake; the file is valid UTF-8 with `U+2014`.
 

@@ -1,8 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
+  ArrowLeftRight,
   BookmarkPlus,
   ChevronRight,
   Play,
+  Plus,
   RefreshCw,
   Sparkles,
   Target,
@@ -12,6 +14,7 @@ import {
 } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { ExerciseGraphic } from '../components/ExerciseGraphic'
+import { ExercisePicker } from '../components/ExercisePicker'
 import { db } from '../db'
 import { formatWeight } from '../lib/format'
 import { getExerciseHistoryMap, getProgressInsights } from '../lib/history'
@@ -20,7 +23,7 @@ import {
   deleteSavedPlan,
   savePlan,
 } from '../lib/plans'
-import { actionLabel } from '../lib/progression'
+import { actionLabel, suggestProgression } from '../lib/progression'
 import { restSecondsFor } from '../lib/rest'
 import { speak } from '../lib/speech'
 import {
@@ -35,6 +38,7 @@ import {
   startWorkout,
 } from '../lib/workout'
 import type {
+  Exercise,
   ExerciseSession,
   ProgressInsight,
   ProgressionAction,
@@ -50,6 +54,8 @@ interface Props {
   onNavigate: (tab: Tab) => void
   onEditSettings: () => void
 }
+
+type PickerMode = { type: 'add' } | { type: 'replace'; index: number }
 
 const ACTION_STYLES: Record<ProgressionAction, string> = {
   start: 'bg-zinc-800 text-zinc-400',
@@ -81,6 +87,8 @@ export function PlanScreen({
   const [busy, setBusy] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
   const [planName, setPlanName] = useState('')
+  const [customPlan, setCustomPlan] = useState<PlanItem[] | null>(null)
+  const [pickerMode, setPickerMode] = useState<PickerMode | null>(null)
 
   const exercises = useLiveQuery(() => db.exercises.toArray(), [])
   const history = useLiveQuery<Map<string, ExerciseSession>>(
@@ -99,10 +107,66 @@ export function PlanScreen({
     [exercises],
   )
 
-  const plan = useMemo(() => {
+  const generatedPlan = useMemo(() => {
     if (!exercises || !history) return []
     return buildSessionPlan(exercises, settings, history, seed)
   }, [exercises, history, settings, seed])
+  const plan = customPlan ?? generatedPlan
+
+  const makePlanItem = (exercise: Exercise): PlanItem => {
+    const suggestion = suggestProgression(
+      exercise,
+      history?.get(exercise.id)?.sets ?? [],
+      exercises ?? [],
+    )
+    if (suggestion.action === 'progress_variation') {
+      return {
+        exercise,
+        suggestion: {
+          ...suggestion,
+          action: 'add_reps',
+          nextExercise: undefined,
+          reason: `Top of the range reached - keep ${exercise.name} and add reps or slow the tempo.`,
+        },
+      }
+    }
+    return { exercise, suggestion }
+  }
+
+  const handlePickPlanExercise = (exercise: Exercise) => {
+    if (!pickerMode) return
+    const item = makePlanItem(exercise)
+    if (pickerMode.type === 'add') {
+      setCustomPlan([...plan, item])
+    } else {
+      setCustomPlan(
+        plan.map((existing, index) =>
+          index === pickerMode.index ? item : existing,
+        ),
+      )
+    }
+    if (settings.voiceCues) {
+      speak(`${exercise.name}. ${exercise.cues ?? ''}`)
+    }
+    setPickerMode(null)
+  }
+
+  const removePlanItem = (index: number) => {
+    setCustomPlan(plan.filter((_, itemIndex) => itemIndex !== index))
+  }
+
+  const handleShuffle = () => {
+    setCustomPlan(null)
+    setSeed((value) => value + 1)
+  }
+
+  const pickerExistingIds = useMemo(() => {
+    const ids = plan.map((item) => item.exercise.id)
+    if (pickerMode?.type === 'replace') {
+      ids.splice(pickerMode.index, 1)
+    }
+    return new Set(ids)
+  }, [plan, pickerMode])
 
   const handleApply = async () => {
     if (busy || plan.length === 0) return
@@ -184,7 +248,7 @@ export function PlanScreen({
         </div>
         <button
           type="button"
-          onClick={() => setSeed((value) => value + 1)}
+          onClick={handleShuffle}
           className="mt-1 inline-flex items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-2 text-[11px] font-semibold text-zinc-300 active:scale-95"
         >
           <RefreshCw size={13} />
@@ -228,9 +292,21 @@ export function PlanScreen({
 
       <div className="mt-5 flex items-center justify-between">
         <h2 className="text-sm font-bold text-zinc-200">Today&apos;s session</h2>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-          {plan.length} movements
-        </span>
+        <div className="flex items-center gap-2">
+          {customPlan ? (
+            <button
+              type="button"
+              onClick={() => setCustomPlan(null)}
+              className="text-[10px] font-semibold uppercase tracking-wider text-brand-300"
+            >
+              Reset
+            </button>
+          ) : null}
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            {customPlan ? 'Edited - ' : ''}
+            {plan.length} movements
+          </span>
+        </div>
       </div>
 
       <div className="mt-2.5 space-y-2">
@@ -275,11 +351,43 @@ export function PlanScreen({
                     Progressed from {item.progressedFrom.name}
                   </p>
                 ) : null}
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() =>
+                      setPickerMode({ type: 'replace', index })
+                    }
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold text-zinc-400 disabled:opacity-50"
+                  >
+                    <ArrowLeftRight size={11} />
+                    Swap
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => removePlanItem(index)}
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold text-zinc-500 disabled:opacity-50"
+                  >
+                    <Trash2 size={11} />
+                    Remove
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => setPickerMode({ type: 'add' })}
+        className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 px-4 py-2.5 text-xs font-semibold text-zinc-300 disabled:opacity-50"
+      >
+        <Plus size={14} />
+        Add exercise
+      </button>
 
       <div className="mt-3">
         {saveOpen ? (
@@ -444,6 +552,15 @@ export function PlanScreen({
         top of its rep range, load increases. Bodyweight movements advance to the
         next variation or add reps. Skipped sets hold you at the current level.
       </p>
+
+      <ExercisePicker
+        open={pickerMode !== null}
+        exercises={exercises ?? []}
+        settings={settings}
+        existingIds={pickerExistingIds}
+        onClose={() => setPickerMode(null)}
+        onPick={handlePickPlanExercise}
+      />
     </div>
   )
 }
