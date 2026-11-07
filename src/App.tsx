@@ -58,6 +58,7 @@ function EmptyTrain({ goal, onStart }: { goal: Goal; onStart: () => void }) {
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('home')
+  const [settingsReturnTab, setSettingsReturnTab] = useState<Tab | null>(null)
   const settings = useLiveQuery(() => db.settings.get(1), []) ?? DEFAULT_SETTINGS
   const active = useLiveQuery(
     () => db.workouts.where('status').equals('active').first(),
@@ -67,6 +68,22 @@ export default function App() {
   const hiit = useHiitTimer(settings.sound)
   useTheme(settings.theme)
   useWakeLock(Boolean(active) || hiit.status === 'running')
+
+  const handleTabChange = (next: Tab) => {
+    setSettingsReturnTab(null)
+    setTab(next)
+  }
+
+  const handleEditSettings = () => {
+    setSettingsReturnTab('plan')
+    setTab('settings')
+  }
+
+  const handleSettingsBack = () => {
+    if (!settingsReturnTab) return
+    setTab(settingsReturnTab)
+    setSettingsReturnTab(null)
+  }
 
   const handleStart = async (goal: Goal) => {
     await startWorkout(goal)
@@ -87,7 +104,7 @@ export default function App() {
             settings={settings}
             onStart={(goal) => void handleStart(goal)}
             onGeneratePlan={(goal) => void handleGeneratePlan(goal)}
-            onNavigate={setTab}
+            onNavigate={handleTabChange}
           />
         ) : null}
 
@@ -111,12 +128,22 @@ export default function App() {
         {tab === 'hiit' ? <HiitScreen timer={hiit} /> : null}
 
         {tab === 'plan' ? (
-          <PlanScreen settings={settings} active={active} onNavigate={setTab} />
+          <PlanScreen
+            settings={settings}
+            active={active}
+            onNavigate={handleTabChange}
+            onEditSettings={handleEditSettings}
+          />
         ) : null}
 
         {tab === 'history' ? <HistoryScreen settings={settings} /> : null}
 
-        {tab === 'settings' ? <SettingsScreen settings={settings} /> : null}
+        {tab === 'settings' ? (
+          <SettingsScreen
+            settings={settings}
+            onBack={settingsReturnTab ? handleSettingsBack : undefined}
+          />
+        ) : null}
       </main>
 
       {rest.timer ? (
@@ -138,7 +165,7 @@ export default function App() {
 
       <BottomNav
         tab={tab}
-        onChange={setTab}
+        onChange={handleTabChange}
         hasActive={Boolean(active)}
         hasHiit={hiit.status !== null}
       />

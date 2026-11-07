@@ -48,6 +48,7 @@ interface Props {
   settings: Settings
   active?: Workout
   onNavigate: (tab: Tab) => void
+  onEditSettings: () => void
 }
 
 const ACTION_STYLES: Record<ProgressionAction, string> = {
@@ -70,7 +71,12 @@ function targetText(item: PlanItem, settings: Settings): string {
   return reps
 }
 
-export function PlanScreen({ settings, active, onNavigate }: Props) {
+export function PlanScreen({
+  settings,
+  active,
+  onNavigate,
+  onEditSettings,
+}: Props) {
   const [seed, setSeed] = useState(0)
   const [busy, setBusy] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
@@ -201,7 +207,7 @@ export function PlanScreen({ settings, active, onNavigate }: Props) {
           </div>
           <button
             type="button"
-            onClick={() => onNavigate('settings')}
+            onClick={onEditSettings}
             className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-brand-300"
           >
             Edit

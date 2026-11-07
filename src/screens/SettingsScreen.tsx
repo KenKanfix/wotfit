@@ -1,4 +1,5 @@
 import {
+  ArrowLeft,
   Bell,
   Check,
   ChevronRight,
@@ -39,6 +40,7 @@ import type { Equipment, Goal, Settings } from '../types'
 
 interface Props {
   settings: Settings
+  onBack?: () => void
 }
 
 const GOALS: Goal[] = [
@@ -70,7 +72,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
-export function SettingsScreen({ settings }: Props) {
+export function SettingsScreen({ settings, onBack }: Props) {
   const [permission, setPermission] = useState<
     NotificationPermission | 'unsupported'
   >(typeof Notification !== 'undefined' ? Notification.permission : 'unsupported')
@@ -176,6 +178,17 @@ export function SettingsScreen({ settings }: Props) {
 
   return (
     <div className="px-5 pb-28 pt-6">
+      {onBack ? (
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-300 active:scale-95"
+          aria-label="Back to smart plan"
+        >
+          <ArrowLeft size={14} />
+          Smart plan
+        </button>
+      ) : null}
       <header>
         <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-300">
           Tune
