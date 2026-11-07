@@ -1,0 +1,45 @@
+{
+  "name": "reps",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:pages": "tsc -b && vite build --base=/wotfit/",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "native:sync": "npm run build && cap sync android",
+    "native:android": "cap add android",
+    "native:ios": "cap add ios",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios",
+    "android:assets": "capacitor-assets generate --android --iconBackgroundColor \"#09090b\" --iconBackgroundColorDark \"#09090b\" --splashBackgroundColor \"#09090b\" --splashBackgroundColorDark \"#09090b\" --logoSplashScale 0.22",
+    "android:debug": "npm run build && cap sync android && cd android && gradlew.bat assembleDebug",
+    "android:bundle": "npm run build && cap sync android && cd android && gradlew.bat bundleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/ios": "^8.6.0",
+    "dexie": "^4.4.7",
+    "dexie-react-hooks": "^4.4.0",
+    "lucide-react": "^1.68.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.0",
+    "@tailwindcss/vite": "^4.3.4",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.89.0",
+    "tailwindcss": "^4.3.4",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0"
+  }
+}
