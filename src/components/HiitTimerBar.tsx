@@ -14,18 +14,23 @@ export function HiitTimerBar({ timer, raised, onOpen }: Props) {
 
   const finished = timer.status === 'finished'
   const paused = timer.status === 'paused'
+  const countdown = timer.countdown
   const label = finished
     ? 'HIIT complete'
     : paused
       ? 'HIIT paused'
-      : interval.type === 'work'
-        ? 'HIIT work'
-        : 'HIIT rest'
+      : countdown
+        ? 'HIIT get ready'
+        : interval.type === 'work'
+          ? 'HIIT work'
+          : 'HIIT rest'
   const subtitle = finished
     ? 'Tap to review'
-    : interval.type === 'work'
-      ? interval.exerciseName
-      : `Next · ${interval.exerciseName}`
+    : countdown
+      ? `First up · ${interval.exerciseName}`
+      : interval.type === 'work'
+        ? interval.exerciseName
+        : `Next · ${interval.exerciseName}`
 
   return (
     <div
@@ -44,7 +49,7 @@ export function HiitTimerBar({ timer, raised, onOpen }: Props) {
           className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${
             finished
               ? 'bg-brand-400/15 text-brand-300'
-              : paused
+              : paused || countdown
                 ? 'bg-amber-400/15 text-amber-300'
                 : interval.type === 'work'
                   ? 'bg-brand-400/15 text-brand-300'

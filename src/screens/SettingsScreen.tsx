@@ -126,14 +126,21 @@ export function SettingsScreen({ settings, onBack }: Props) {
   }
 
   const exportData = async () => {
-    const [exercises, workouts, sets, storedSettings, savedPlans] =
-      await Promise.all([
-        db.exercises.toArray(),
-        db.workouts.toArray(),
-        db.sets.toArray(),
-        db.settings.toArray(),
-        db.savedPlans.toArray(),
-      ])
+    const [
+      exercises,
+      workouts,
+      sets,
+      storedSettings,
+      savedPlans,
+      hiitSessions,
+    ] = await Promise.all([
+      db.exercises.toArray(),
+      db.workouts.toArray(),
+      db.sets.toArray(),
+      db.settings.toArray(),
+      db.savedPlans.toArray(),
+      db.hiitSessions.toArray(),
+    ])
     const payload = {
       app: 'WOTFit by Ken Kanfix',
       exportedAt: new Date().toISOString(),
@@ -142,6 +149,7 @@ export function SettingsScreen({ settings, onBack }: Props) {
       workouts,
       sets,
       savedPlans,
+      hiitSessions,
     }
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: 'application/json',

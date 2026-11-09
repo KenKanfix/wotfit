@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Dumbbell, Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BottomNav } from './components/BottomNav'
 import { HiitTimerBar } from './components/HiitTimerBar'
 import { RestTimerBar } from './components/RestTimerBar'
@@ -9,6 +9,7 @@ import { useHiitTimer } from './hooks/useHiitTimer'
 import { useRestTimer } from './hooks/useRestTimer'
 import { useTheme } from './hooks/useTheme'
 import { useWakeLock } from './hooks/useWakeLock'
+import { saveHiitSession } from './lib/hiitHistory'
 import { GOAL_LABELS } from './lib/recommend'
 import { REST_STEP_SECONDS } from './lib/rest'
 import { startWorkout } from './lib/workout'
@@ -65,7 +66,24 @@ export default function App() {
     [],
   )
   const rest = useRestTimer(settings.sound)
-  const hiit = useHiitTimer(settings.sound)
+  const hiit = useHiitTimer(settings.sound, settings.voiceCues)
+  const savedHiitRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (
+      hiit.status !== 'finished' ||
+      !hiit.program ||
+      hiit.startedAt == null ||
+      hiit.finishedAt == null ||
+      savedHiitRef.current === hiit.startedAt
+    ) {
+      return
+    }
+
+    savedHiitRef.current = hiit.startedAt
+    void saveHiitSession(hiit.program, hiit.startedAt, hiit.finishedAt)
+  }, [hiit.status, hiit.program, hiit.startedAt, hiit.finishedAt])
+
   useTheme(settings.theme)
   useWakeLock(Boolean(active) || hiit.status === 'running')
 

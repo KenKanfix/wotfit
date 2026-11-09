@@ -1,6 +1,6 @@
 # WOTFit — Session History
 
-Last updated: 2026-11-07
+Last updated: 2026-11-09
 
 ## Project
 
@@ -28,13 +28,15 @@ Last updated: 2026-11-07
 - Goal-based plan generation with equipment, experience level, and calisthenics progressions.
 - Exercise library with 70 movements and bodyweight ladders.
 - Smart Plan editing: swap, remove, or add exercises before starting or saving.
-- History screen with completed sessions and set details.
+- History screen with completed strength sessions, HIIT sessions, and set details.
 - Settings for goal, experience, equipment, units, sound, notifications, install, export, and reset.
 - PWA manifest, service worker, install prompt support, and Capacitor configuration.
-- JSON export of settings, exercises, workouts, saved plans, and sets from Settings.
+- JSON export of settings, exercises, workouts, saved plans, sets, and HIIT sessions from Settings.
 - Default rest of 20 seconds with 5-second adjustments and per-exercise overrides.
 - Named workout plans that can be saved, started, or added to an active session.
 - Larger animated exercise preview opened from workout, plan, and HIIT screens.
+- HIIT timer with Auto, Custom, and Ladder modes, a 10-second pre-start countdown, 112px active timer, transition warning sound, and voice announcements for upcoming intervals.
+- Ladder HIIT builds ascending then descending exercise rungs with fixed or 1:N rest:work recovery.
 - Dark and light appearance modes persisted in settings.
 
 ## Session 2026-11-05 — Icon and Start-button fixes
@@ -129,6 +131,43 @@ Last updated: 2026-11-07
 3. Added a back button from Settings to Smart Plan when Settings was opened via the Plan screen's Edit action.
 4. Verified with `npm run lint`, `npm run build:pages`, and a headless Chrome flow covering swap, add, remove, reset, and Frog sprawl kick search.
 
+## Session 2026-11-08 - HIIT timer feedback and countdown
+
+1. Enlarged the active HIIT countdown from `text-7xl` to `text-8xl` with tight line height; verified at 96px with no horizontal overflow.
+2. Added a 10-second pre-start countdown.
+   - Starting a session now shows `Get ready` with the first exercise and counts down before the first work interval.
+   - Voice: `Start your watch. First up: <exercise>.`
+   - At three seconds remaining: `Get ready. <exercise> in 3 seconds.`
+   - At zero: plays the work cue and announces `Go: <exercise>.`
+   - Pause/resume holds and resumes the countdown; Skip starts the first interval immediately.
+3. Added a distinct three-note warning sound for the last three seconds of each rest interval.
+4. Added voice announcements:
+   - At work start: `Go: <exercise>.`
+   - At rest start: `Break. Next up: <next exercise>.`
+   - Three seconds before the next interval: `Get ready. <next exercise> in 3 seconds.` or `Break in 3 seconds.`
+   - Final interval: `Final 3 seconds.`
+5. Moved HIIT announcements into `useHiitTimer` so they continue while the user is on another tab.
+6. Verified with `npm run lint`, `npm run build:pages`, and headless Chrome tests covering the countdown, 96px timer, pause/resume/skip during countdown, rest/work announcements, both warning announcements, and the warning/rest audio cues.
+
+## Session 2026-11-09 - HIIT history, larger timer, and Ladder mode
+
+1. Persisted completed HIIT sessions to a new Dexie `hiitSessions` table (schema version 6).
+   - Saved on finish from `App.tsx` via `saveHiitSession()` in `src/lib/hiitHistory.ts`.
+   - Stored mode, work/rest settings, rest ratio, ladder steps, rungs, total time, and interval detail.
+   - Added HIIT sessions to History alongside completed strength workouts, with expandable details and delete.
+   - Added `hiitSessions` to the Settings JSON export.
+2. Increased the active HIIT timer from 96px to 112px (`text-[7rem]`) with a 96px fallback below 360px width.
+3. Added Ladder as a third HIIT mode.
+   - Uses the selected exercises in order as steps.
+   - Builds ascending rungs `[1]`, `[1,2]`, ... `[1..N]`, then descending rungs `[2..N]`, ... `[N]`.
+   - Every exercise in a rung runs for the configured work time; rest follows each rung.
+   - Rest can be fixed seconds or `1:N` rest:work based on the rung's total work time.
+   - A 3-step ladder produces 5 rungs; a 6-step ladder produces 11 rungs.
+4. Verified with `npm run lint`, `npm run build:pages`, and headless Chrome tests covering:
+   - Ladder preview counts, fixed/ratio rest summaries, and 112px timer with no overflow.
+   - Saving a finished ladder session to History and persistence after reload.
+   - The exact 3-step ladder sequence: `[1]`, `[1,2]`, `[1,2,3]`, `[2,3]`, `[3]`.
+
 ## Important build/deploy notes
 
 - Android must be built from the root-base `dist`: run `npm run build` before `npx cap sync android`.
@@ -145,11 +184,13 @@ Last updated: 2026-11-07
 - `src/lib/progression.ts`: double-progression logic
 - `src/lib/recommend.ts`: goal/equipment/level plan builder
 - `src/lib/history.ts`: history queries and progress insights
+- `src/lib/hiitHistory.ts`: save/delete completed HIIT sessions
 - `src/data/exercises.ts`: exercise library and progression groups
 - `src/db.ts`: Dexie schema, defaults, seeding
-- `src/hooks/useRestTimer.ts`, `src/hooks/useWakeLock.ts`: rest/wake-lock behavior
+- `src/hooks/useRestTimer.ts`, `src/hooks/useHiitTimer.ts`, `src/hooks/useWakeLock.ts`: rest/HIIT/wake-lock behavior
+- `src/lib/feedback.ts`, `src/lib/speech.ts`: HIIT audio cues and voice announcements
 - `src/components/ExercisePicker.tsx`, `RestTimerBar.tsx`, `BottomNav.tsx`
-- `src/screens/HomeScreen.tsx`, `WorkoutScreen.tsx`, `PlanScreen.tsx`, `HistoryScreen.tsx`, `SettingsScreen.tsx`
+- `src/screens/HomeScreen.tsx`, `WorkoutScreen.tsx`, `HiitScreen.tsx`, `PlanScreen.tsx`, `HistoryScreen.tsx`, `SettingsScreen.tsx`
 - `vite.config.ts`: PWA manifest and asset configuration
 - `public/`: generated PWA, Apple, and favicon images
 - `GymKenKanfixIcon.png`: source image for all app icons

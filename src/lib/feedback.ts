@@ -61,11 +61,20 @@ function playTones(tones: Tone[]): void {
   }
 }
 
-export type HiitCue = 'start' | 'work' | 'rest' | 'finish'
+export type HiitCue = 'start' | 'work' | 'rest' | 'warning' | 'finish'
 
 export function playHiitCue(cue: HiitCue): void {
   if (cue === 'start') {
     playTones([{ frequency: 660, offset: 0, duration: 0.14, gain: 0.18 }])
+    return
+  }
+
+  if (cue === 'warning') {
+    playTones([
+      { frequency: 880, offset: 0, duration: 0.09, gain: 0.2 },
+      { frequency: 880, offset: 0.12, duration: 0.09, gain: 0.2 },
+      { frequency: 1174, offset: 0.24, duration: 0.14, gain: 0.24 },
+    ])
     return
   }
 

@@ -11,6 +11,7 @@ import {
   Sparkles,
   Square,
   Timer,
+  TrendingUp,
   X,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -22,26 +23,29 @@ import { formatSeconds } from '../lib/format'
 import {
   buildAutoHiitProgram,
   buildCustomHiitProgram,
+  buildLadderHiitProgram,
   DEFAULT_HIIT_EXERCISE_IDS,
+  DEFAULT_HIIT_LADDER_RATIO,
   DEFAULT_HIIT_REST_SECONDS,
   DEFAULT_HIIT_ROUNDS,
   DEFAULT_HIIT_TOTAL_MINUTES,
   DEFAULT_HIIT_WORK_SECONDS,
+  HIIT_LADDER_RATIO_STEP,
   HIIT_REST_STEP,
   HIIT_WORK_STEP,
+  MAX_HIIT_LADDER_RATIO,
   MAX_HIIT_REST_SECONDS,
   MAX_HIIT_ROUNDS,
   MAX_HIIT_TOTAL_MINUTES,
   MAX_HIIT_WORK_SECONDS,
+  MIN_HIIT_LADDER_RATIO,
   MIN_HIIT_REST_SECONDS,
   MIN_HIIT_ROUNDS,
   MIN_HIIT_TOTAL_MINUTES,
   MIN_HIIT_WORK_SECONDS,
 } from '../lib/hiit'
 import { EQUIPMENT_LABELS } from '../lib/recommend'
-import type { Exercise } from '../types'
-
-type Mode = 'auto' | 'custom'
+import type { Exercise, HiitMode, HiitRestMode } from '../types'
 
 interface StepperProps {
   label: string
@@ -51,6 +55,7 @@ interface StepperProps {
   step: number
   min: number
   max: number
+  displayValue?: string
   onChange: (value: number) => void
 }
 
@@ -62,6 +67,7 @@ function Stepper({
   step,
   min,
   max,
+  displayValue,
   onChange,
 }: StepperProps) {
   return (
@@ -82,10 +88,12 @@ function Stepper({
           <Minus size={14} />
         </button>
         <span className="min-w-16 text-center text-sm font-semibold tabular-nums text-zinc-100">
-          {value}
-          <span className="ml-1 text-[9px] font-medium uppercase tracking-wide text-zinc-500">
-            {unit}
-          </span>
+          {displayValue ?? value}
+          {unit ? (
+            <span className="ml-1 text-[9px] font-medium uppercase tracking-wide text-zinc-500">
+              {unit}
+            </span>
+          ) : null}
         </span>
         <button
           type="button"
@@ -115,7 +123,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 export function HiitScreen({ timer }: { timer: HiitTimer }) {
   const exercises = useLiveQuery(() => db.exercises.toArray(), [])
-  const [mode, setMode] = useState<Mode>('auto')
+  const [mode, setMode] = useState<HiitMode>('auto')
   const [selectedIds, setSelectedIds] = useState<string[]>(
     DEFAULT_HIIT_EXERCISE_IDS,
   )
@@ -123,6 +131,8 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
   const [rounds, setRounds] = useState(DEFAULT_HIIT_ROUNDS)
   const [workSeconds, setWorkSeconds] = useState(DEFAULT_HIIT_WORK_SECONDS)
   const [restSeconds, setRestSeconds] = useState(DEFAULT_HIIT_REST_SECONDS)
+  const [restMode, setRestMode] = useState<HiitRestMode>('fixed')
+  const [restRatio, setRestRatio] = useState(DEFAULT_HIIT_LADDER_RATIO)
   const [pickerOpen, setPickerOpen] = useState(false)
 
   const exerciseMap = useMemo(
@@ -141,30 +151,42 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
     [selectedIds, exerciseMap],
   )
 
-  const program = useMemo(
-    () =>
-      mode === 'auto'
-        ? buildAutoHiitProgram(
-            selectedExercises,
-            totalMinutes,
-            workSeconds,
-            restSeconds,
-          )
-        : buildCustomHiitProgram(
-            selectedExercises,
-            rounds,
-            workSeconds,
-            restSeconds,
-          ),
-    [
-      mode,
+  const program = useMemo(() => {
+    if (mode === 'auto') {
+      return buildAutoHiitProgram(
+        selectedExercises,
+        totalMinutes,
+        workSeconds,
+        restSeconds,
+      )
+    }
+
+    if (mode === 'custom') {
+      return buildCustomHiitProgram(
+        selectedExercises,
+        rounds,
+        workSeconds,
+        restSeconds,
+      )
+    }
+
+    return buildLadderHiitProgram(
       selectedExercises,
-      totalMinutes,
-      rounds,
       workSeconds,
+      restMode,
       restSeconds,
-    ],
-  )
+      restRatio,
+    )
+  }, [
+    mode,
+    selectedExercises,
+    totalMinutes,
+    rounds,
+    workSeconds,
+    restSeconds,
+    restMode,
+    restRatio,
+  ])
 
   const toggleExercise = (id: string) => {
     setSelectedIds((current) =>
@@ -259,6 +281,7 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
         .slice(timer.index + 1)
         .find((interval) => interval.type === 'work') ?? null
     const isWork = current.type === 'work'
+    const isCountdown = timer.countdown
     const isRunning = timer.status === 'running'
 
     return (
@@ -287,24 +310,37 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
             className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${
               timer.status === 'paused'
                 ? 'bg-amber-400/15 text-amber-300'
-                : isWork
-                  ? 'bg-brand-400/15 text-brand-300'
-                  : 'bg-sky-400/15 text-sky-300'
+                : isCountdown
+                  ? 'bg-amber-400/15 text-amber-300'
+                  : isWork
+                    ? 'bg-brand-400/15 text-brand-300'
+                    : 'bg-sky-400/15 text-sky-300'
             }`}
           >
-            {timer.status === 'paused' ? 'Paused' : isWork ? 'Work' : 'Rest'}
+            {timer.status === 'paused'
+              ? 'Paused'
+              : isCountdown
+                ? 'Get ready'
+                : isWork
+                  ? 'Work'
+                  : 'Rest'}
           </span>
-          <p className="mt-4 font-mono text-7xl font-bold tabular-nums tracking-tight text-zinc-50">
+          <p className="mt-4 font-mono text-[7rem] font-bold leading-none tabular-nums tracking-tight text-zinc-50 max-[360px]:text-8xl">
             {formatSeconds(timer.remaining)}
           </p>
           <p className="mt-1 text-xs text-zinc-500">
-            of {formatSeconds(current.duration)} · {formatSeconds(timer.totalRemaining)}{' '}
-            left overall
+            {isCountdown
+              ? `First up: ${current.exerciseName}`
+              : `of ${formatSeconds(current.duration)} · ${formatSeconds(timer.totalRemaining)} left overall`}
           </p>
           <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
             <div
               className={`h-full rounded-full transition-[width] duration-200 ${
-                isWork ? 'bg-brand-400' : 'bg-sky-400'
+                isCountdown
+                  ? 'bg-amber-400'
+                  : isWork
+                    ? 'bg-brand-400'
+                    : 'bg-sky-400'
               }`}
               style={{
                 width: `${Math.round(timer.intervalProgress * 100)}%`,
@@ -330,13 +366,19 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
             <ExerciseGraphic
               exerciseId={current.exerciseId}
               name={current.exerciseName}
-              animate={isRunning && isWork}
+              animate={isRunning && isWork && !isCountdown}
               expandable
               className="h-20 w-20 shrink-0 rounded-2xl border border-zinc-800"
             />
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                {isWork ? 'Now' : 'Rest before'}
+                {isCountdown
+                  ? 'First up'
+                  : isWork
+                    ? 'Now'
+                    : upcoming
+                      ? 'Rest before'
+                      : 'Final rest'}
               </p>
               <h2 className="mt-0.5 truncate text-lg font-bold text-zinc-100">
                 {current.exerciseName}
@@ -348,12 +390,20 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
               ) : null}
             </div>
           </div>
-          {upcoming ? (
+          {isCountdown ? (
+            <p className="mt-3 rounded-xl bg-zinc-950/60 px-3 py-2 text-[11px] text-zinc-500">
+              The first interval starts after the countdown.
+            </p>
+          ) : upcoming ? (
             <p className="mt-3 rounded-xl bg-zinc-950/60 px-3 py-2 text-[11px] text-zinc-500">
               Up next ·{' '}
               <span className="font-semibold text-zinc-300">
                 {upcoming.exerciseName}
               </span>
+            </p>
+          ) : current.type === 'rest' ? (
+            <p className="mt-3 rounded-xl bg-zinc-950/60 px-3 py-2 text-[11px] text-zinc-500">
+              Final rest. The session finishes when this ends.
             </p>
           ) : (
             <p className="mt-3 rounded-xl bg-zinc-950/60 px-3 py-2 text-[11px] text-zinc-500">
@@ -408,11 +458,11 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
         </p>
       </header>
 
-      <div className="mt-5 grid grid-cols-2 gap-1 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-1">
+      <div className="mt-5 grid grid-cols-3 gap-1 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-1">
         <button
           type="button"
           onClick={() => setMode('auto')}
-          className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-colors ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-bold transition-colors ${
             mode === 'auto'
               ? 'bg-brand-400 text-zinc-950'
               : 'text-zinc-400'
@@ -424,7 +474,7 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
         <button
           type="button"
           onClick={() => setMode('custom')}
-          className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-colors ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-bold transition-colors ${
             mode === 'custom'
               ? 'bg-brand-400 text-zinc-950'
               : 'text-zinc-400'
@@ -432,6 +482,18 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
         >
           <SlidersHorizontal size={14} />
           Custom
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('ladder')}
+          className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-bold transition-colors ${
+            mode === 'ladder'
+              ? 'bg-brand-400 text-zinc-950'
+              : 'text-zinc-400'
+          }`}
+        >
+          <TrendingUp size={14} />
+          Ladder
         </button>
       </div>
 
@@ -520,7 +582,7 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
             max={MAX_HIIT_TOTAL_MINUTES}
             onChange={setTotalMinutes}
           />
-        ) : (
+        ) : mode === 'custom' ? (
           <Stepper
             label="Rounds"
             hint="Each round cycles through every exercise."
@@ -531,10 +593,27 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
             max={MAX_HIIT_ROUNDS}
             onChange={setRounds}
           />
+        ) : (
+          <div className="flex items-center justify-between gap-3 py-2.5 first:pt-0">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-zinc-100">Steps</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">
+                Uses your selected exercises in order. {selectedExercises.length}{' '}
+                steps = {program.rounds} rungs.
+              </p>
+            </div>
+            <span className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm font-semibold tabular-nums text-zinc-100">
+              {selectedExercises.length}
+            </span>
+          </div>
         )}
         <Stepper
           label="Work"
-          hint="Push hard for this long."
+          hint={
+            mode === 'ladder'
+              ? 'Each exercise in a rung runs for this long.'
+              : 'Push hard for this long.'
+          }
           value={workSeconds}
           unit="sec"
           step={HIIT_WORK_STEP}
@@ -542,16 +621,77 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
           max={MAX_HIIT_WORK_SECONDS}
           onChange={setWorkSeconds}
         />
-        <Stepper
-          label="Rest"
-          hint="Recovery between work intervals."
-          value={restSeconds}
-          unit="sec"
-          step={HIIT_REST_STEP}
-          min={MIN_HIIT_REST_SECONDS}
-          max={MAX_HIIT_REST_SECONDS}
-          onChange={setRestSeconds}
-        />
+        {mode === 'ladder' ? (
+          <>
+            <div className="flex items-center justify-between gap-3 py-2.5">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-zinc-100">Rest</p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">
+                  Fixed time or 1:N rest:work after each rung.
+                </p>
+              </div>
+              <div className="flex shrink-0 rounded-xl border border-zinc-800 bg-zinc-950 p-1">
+                <button
+                  type="button"
+                  onClick={() => setRestMode('fixed')}
+                  className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition-colors ${
+                    restMode === 'fixed'
+                      ? 'bg-zinc-800 text-zinc-100'
+                      : 'text-zinc-500'
+                  }`}
+                >
+                  Fixed
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRestMode('ratio')}
+                  className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition-colors ${
+                    restMode === 'ratio'
+                      ? 'bg-zinc-800 text-zinc-100'
+                      : 'text-zinc-500'
+                  }`}
+                >
+                  Ratio
+                </button>
+              </div>
+            </div>
+            {restMode === 'fixed' ? (
+              <Stepper
+                label="Rest time"
+                hint="Recovery after each rung."
+                value={restSeconds}
+                unit="sec"
+                step={HIIT_REST_STEP}
+                min={MIN_HIIT_REST_SECONDS}
+                max={MAX_HIIT_REST_SECONDS}
+                onChange={setRestSeconds}
+              />
+            ) : (
+              <Stepper
+                label="Rest ratio"
+                hint="Rest is 1/N of the rung's work."
+                value={restRatio}
+                unit=""
+                displayValue={`1:${restRatio}`}
+                step={HIIT_LADDER_RATIO_STEP}
+                min={MIN_HIIT_LADDER_RATIO}
+                max={MAX_HIIT_LADDER_RATIO}
+                onChange={setRestRatio}
+              />
+            )}
+          </>
+        ) : (
+          <Stepper
+            label="Rest"
+            hint="Recovery between work intervals."
+            value={restSeconds}
+            unit="sec"
+            step={HIIT_REST_STEP}
+            min={MIN_HIIT_REST_SECONDS}
+            max={MAX_HIIT_REST_SECONDS}
+            onChange={setRestSeconds}
+          />
+        )}
       </section>
 
       <section className="mt-4 rounded-3xl border border-brand-400/20 bg-brand-400/[0.04] p-4">
@@ -561,11 +701,19 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
           <Stat label="Work" value={String(workCount)} />
         </div>
         <p className="mt-3 text-center text-[11px] text-zinc-500">
-          {program.workSeconds}s work ·{' '}
-          {program.restSeconds > 0
-            ? `${program.restSeconds}s rest`
-            : 'no rest'}{' '}
-          per interval
+          {mode === 'ladder'
+            ? `${program.workSeconds}s per exercise · ${
+                program.restMode === 'ratio'
+                  ? `1:${program.restRatio} rest:work`
+                  : program.restSeconds > 0
+                    ? `${program.restSeconds}s rest`
+                    : 'no rest'
+              } after each rung`
+            : `${program.workSeconds}s work · ${
+                program.restSeconds > 0
+                  ? `${program.restSeconds}s rest`
+                  : 'no rest'
+              } per interval`}
         </p>
       </section>
 

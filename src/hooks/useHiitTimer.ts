@@ -5,24 +5,34 @@ import {
   primeAudio,
   vibrate,
 } from '../lib/feedback'
-import type { HiitProgram } from '../lib/hiit'
+import {
+  HIIT_COUNTDOWN_SECONDS,
+  type HiitInterval,
+  type HiitProgram,
+} from '../lib/hiit'
+import { speak } from '../lib/speech'
 
 export type HiitStatus = 'running' | 'paused' | 'finished'
 
 interface HiitState {
   program: HiitProgram
   index: number
+  startedAt: number
+  finishedAt: number | null
   intervalStartedAt: number
+  countdownEndsAt: number | null
   pausedRemaining: number | null
   status: HiitStatus
 }
 
-export function useHiitTimer(sound: boolean) {
+export function useHiitTimer(sound: boolean, voiceCues: boolean) {
   const [state, setState] = useState<HiitState | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const stateRef = useRef<HiitState | null>(null)
   const soundRef = useRef(sound)
+  const voiceRef = useRef(voiceCues)
   const tickRef = useRef<number | null>(null)
+  const warningRef = useRef<string | null>(null)
 
   useEffect(() => {
     stateRef.current = state
@@ -31,6 +41,26 @@ export function useHiitTimer(sound: boolean) {
   useEffect(() => {
     soundRef.current = sound
   }, [sound])
+
+  useEffect(() => {
+    voiceRef.current = voiceCues
+  }, [voiceCues])
+
+  const announceInterval = useCallback(
+    (interval: HiitInterval, isLast = false) => {
+      if (!voiceRef.current) return
+      if (interval.type === 'rest') {
+        speak(
+          isLast
+            ? 'Final rest. Session complete after this.'
+            : `Break. Next up: ${interval.exerciseName}.`,
+        )
+        return
+      }
+      speak(`Go: ${interval.exerciseName}.`)
+    },
+    [],
+  )
 
   const currentInterval = state?.program.intervals[state.index] ?? null
   const nextInterval =
@@ -43,17 +73,19 @@ export function useHiitTimer(sound: boolean) {
       ? (state.pausedRemaining ?? 0)
       : state.status === 'finished'
         ? 0
-        : currentInterval
-          ? Math.max(
-              0,
-              Math.ceil(
-                (state.intervalStartedAt +
-                  currentInterval.duration * 1000 -
-                  now) /
-                  1000,
-              ),
-            )
-          : 0
+        : state.countdownEndsAt !== null
+          ? Math.max(0, Math.ceil((state.countdownEndsAt - now) / 1000))
+          : currentInterval
+            ? Math.max(
+                0,
+                Math.ceil(
+                  (state.intervalStartedAt +
+                    currentInterval.duration * 1000 -
+                    now) /
+                    1000,
+                ),
+              )
+            : 0
     : 0
 
   useEffect(() => {
@@ -67,6 +99,21 @@ export function useHiitTimer(sound: boolean) {
 
       const interval = current.program.intervals[current.index]
       if (!interval) return
+
+      if (current.countdownEndsAt !== null) {
+        if (time < current.countdownEndsAt) return
+        if (soundRef.current) playHiitCue('work')
+        vibrate([120, 60, 120])
+        announceInterval(interval)
+        const nextState: HiitState = {
+          ...current,
+          countdownEndsAt: null,
+        }
+        stateRef.current = nextState
+        setState(nextState)
+        return
+      }
+
       if (time < current.intervalStartedAt + interval.duration * 1000) return
 
       let index = current.index
@@ -85,7 +132,9 @@ export function useHiitTimer(sound: boolean) {
         const nextState: HiitState = {
           ...current,
           index: current.program.intervals.length - 1,
+          finishedAt: time,
           intervalStartedAt: start,
+          countdownEndsAt: null,
           pausedRemaining: null,
           status: 'finished',
         }
@@ -97,10 +146,15 @@ export function useHiitTimer(sound: boolean) {
       const next = current.program.intervals[index]
       if (soundRef.current) playHiitCue(next.type)
       vibrate(next.type === 'work' ? [120, 60, 120] : [80])
+      announceInterval(
+        next,
+        index === current.program.intervals.length - 1,
+      )
       const nextState: HiitState = {
         ...current,
         index,
         intervalStartedAt: start,
+        countdownEndsAt: null,
         pausedRemaining: null,
       }
       stateRef.current = nextState
@@ -109,7 +163,7 @@ export function useHiitTimer(sound: boolean) {
 
     const handle = window.setInterval(tick, 250)
     return () => window.clearInterval(handle)
-  }, [state?.status])
+  }, [state?.status, announceInterval])
 
   useEffect(() => {
     if (state?.status !== 'running') {
@@ -118,9 +172,48 @@ export function useHiitTimer(sound: boolean) {
     }
 
     if (remaining > 0 && remaining <= 3) {
+      const current = stateRef.current
+      const interval = current?.program.intervals[current.index]
+      const next = current?.program.intervals[current.index + 1]
+      const countdown = Boolean(current?.countdownEndsAt)
+      const warningKey = current
+        ? `${countdown ? 'countdown' : 'interval'}:${current.index}`
+        : null
+
       if (tickRef.current !== remaining) {
         tickRef.current = remaining
-        if (soundRef.current) playTickSound()
+        if (soundRef.current) {
+          if (
+            remaining === 3 &&
+            (countdown || interval?.type === 'rest')
+          ) {
+            playHiitCue('warning')
+          } else {
+            playTickSound()
+          }
+        }
+      }
+
+      if (
+        remaining === 3 &&
+        current &&
+        warningKey &&
+        warningRef.current !== warningKey
+      ) {
+        warningRef.current = warningKey
+        if (voiceRef.current) {
+          if (countdown) {
+            speak(`Get ready. ${interval?.exerciseName} in 3 seconds.`)
+          } else if (next) {
+            speak(
+              interval?.type === 'rest'
+                ? `Get ready. ${next.exerciseName} in 3 seconds.`
+                : 'Break in 3 seconds.',
+            )
+          } else {
+            speak('Final 3 seconds.')
+          }
+        }
       }
       return
     }
@@ -131,19 +224,29 @@ export function useHiitTimer(sound: boolean) {
   const start = useCallback((program: HiitProgram) => {
     if (program.intervals.length === 0) return
     const startedAt = Date.now()
+    const countdownEndsAt = startedAt + HIIT_COUNTDOWN_SECONDS * 1000
     primeAudio()
     tickRef.current = null
+    warningRef.current = null
     setNow(startedAt)
     const nextState: HiitState = {
       program,
       index: 0,
-      intervalStartedAt: startedAt,
+      startedAt,
+      finishedAt: null,
+      intervalStartedAt: countdownEndsAt,
+      countdownEndsAt,
       pausedRemaining: null,
       status: 'running',
     }
     stateRef.current = nextState
     setState(nextState)
     if (soundRef.current) playHiitCue('start')
+    if (voiceRef.current) {
+      speak(
+        `Start your watch. First up: ${program.intervals[0].exerciseName}.`,
+      )
+    }
     vibrate([100, 50, 100])
   }, [])
 
@@ -152,8 +255,10 @@ export function useHiitTimer(sound: boolean) {
       if (!current || current.status !== 'running') return current
       const interval = current.program.intervals[current.index]
       if (!interval) return current
-      const remainingMs =
-        current.intervalStartedAt + interval.duration * 1000 - Date.now()
+      const endsAt =
+        current.countdownEndsAt ??
+        current.intervalStartedAt + interval.duration * 1000
+      const remainingMs = endsAt - Date.now()
       return {
         ...current,
         status: 'paused',
@@ -169,11 +274,24 @@ export function useHiitTimer(sound: boolean) {
       const interval = current.program.intervals[current.index]
       if (!interval) return current
       const remainingSeconds = current.pausedRemaining ?? interval.duration
+      const now = Date.now()
+
+      if (current.countdownEndsAt !== null) {
+        const countdownEndsAt = now + remainingSeconds * 1000
+        return {
+          ...current,
+          status: 'running',
+          intervalStartedAt: countdownEndsAt,
+          countdownEndsAt,
+          pausedRemaining: null,
+        }
+      }
+
       return {
         ...current,
         status: 'running',
         intervalStartedAt:
-          Date.now() - (interval.duration - remainingSeconds) * 1000,
+          now - (interval.duration - remainingSeconds) * 1000,
         pausedRemaining: null,
       }
     })
@@ -183,13 +301,38 @@ export function useHiitTimer(sound: boolean) {
 
   const skip = useCallback(() => {
     if (!state) return
+
+    if (state.countdownEndsAt !== null) {
+      const first = state.program.intervals[state.index]
+      if (!first) return
+      const now = Date.now()
+      if (soundRef.current) playHiitCue('work')
+      announceInterval(first)
+      vibrate([120, 60, 120])
+      warningRef.current = null
+      const nextState: HiitState = {
+        ...state,
+        intervalStartedAt: now,
+        countdownEndsAt: null,
+        pausedRemaining: state.status === 'paused' ? first.duration : null,
+      }
+      stateRef.current = nextState
+      setState(nextState)
+      setNow(now)
+      tickRef.current = null
+      return
+    }
+
     const nextIndex = state.index + 1
 
     if (nextIndex >= state.program.intervals.length) {
       if (soundRef.current) playHiitCue('finish')
       vibrate([200, 100, 200])
+      warningRef.current = null
       const nextState: HiitState = {
         ...state,
+        finishedAt: Date.now(),
+        countdownEndsAt: null,
         pausedRemaining: null,
         status: 'finished',
       }
@@ -200,27 +343,32 @@ export function useHiitTimer(sound: boolean) {
 
     const next = state.program.intervals[nextIndex]
     if (soundRef.current) playHiitCue(next.type)
+    announceInterval(next, nextIndex === state.program.intervals.length - 1)
     vibrate(80)
+    warningRef.current = null
     const nextState: HiitState = {
       ...state,
       index: nextIndex,
       intervalStartedAt: Date.now(),
+      countdownEndsAt: null,
       pausedRemaining: state.status === 'paused' ? next.duration : null,
     }
     stateRef.current = nextState
     setState(nextState)
     setNow(Date.now())
     tickRef.current = null
-  }, [state])
+  }, [state, announceInterval])
 
   const reset = useCallback(() => {
     tickRef.current = null
+    warningRef.current = null
     stateRef.current = null
     setState(null)
   }, [])
 
+  const countdown = Boolean(state?.countdownEndsAt)
   let totalElapsed = 0
-  if (state) {
+  if (state && !countdown) {
     const completed = state.program.intervals
       .slice(0, state.index)
       .reduce((total, interval) => total + interval.duration, 0)
@@ -241,16 +389,20 @@ export function useHiitTimer(sound: boolean) {
     state && state.program.totalSeconds > 0
       ? Math.min(1, totalElapsed / state.program.totalSeconds)
       : 0
-  const intervalProgress = currentInterval
-    ? Math.min(1, Math.max(0, 1 - remaining / currentInterval.duration))
-    : 0
+  const intervalProgress =
+    currentInterval && !countdown
+      ? Math.min(1, Math.max(0, 1 - remaining / currentInterval.duration))
+      : 0
 
   return {
     program: state?.program ?? null,
     status: state?.status ?? null,
+    countdown,
     currentInterval,
     nextInterval,
     index: state?.index ?? 0,
+    startedAt: state?.startedAt ?? null,
+    finishedAt: state?.finishedAt ?? null,
     remaining,
     totalRemaining,
     progress,

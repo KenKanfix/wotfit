@@ -4,6 +4,7 @@ import { DEFAULT_BODY_WEIGHT_KG } from './lib/calories'
 import { DEFAULT_REST_SECONDS } from './lib/rest'
 import type {
   Exercise,
+  HiitSession,
   SavedPlan,
   Settings,
   Workout,
@@ -16,6 +17,7 @@ export class WorkoutDatabase extends Dexie {
   sets!: Table<WorkoutSet, string>
   settings!: Table<Settings, number>
   savedPlans!: Table<SavedPlan, string>
+  hiitSessions!: Table<HiitSession, string>
 
   constructor() {
     super('reps-workout-tracker')
@@ -105,6 +107,15 @@ export class WorkoutDatabase extends Dexie {
             }
           })
       })
+    this.version(6).stores({
+      exercises:
+        'id, name, movement, equipment, category, isCalisthenics, progressionGroup',
+      workouts: 'id, date, status, startedAt',
+      sets: 'id, workoutId, exerciseId, createdAt, [workoutId+exerciseId]',
+      settings: 'id',
+      savedPlans: 'id, createdAt, name',
+      hiitSessions: 'id, startedAt, date, mode',
+    })
   }
 }
 

@@ -84,6 +84,34 @@ export interface WorkoutSet {
   createdAt: number
 }
 
+export type HiitMode = 'auto' | 'custom' | 'ladder'
+
+export type HiitRestMode = 'fixed' | 'ratio'
+
+export interface HiitSessionInterval {
+  type: 'work' | 'rest'
+  duration: number
+  exerciseId: string
+  exerciseName: string
+  round: number
+}
+
+export interface HiitSession {
+  id: string
+  date: string
+  startedAt: number
+  finishedAt: number
+  mode: HiitMode
+  workSeconds: number
+  restSeconds: number
+  restMode: HiitRestMode
+  restRatio: number
+  ladderSteps?: number
+  rounds: number
+  totalSeconds: number
+  intervals: HiitSessionInterval[]
+}
+
 export interface Settings {
   id: number
   goal: Goal
