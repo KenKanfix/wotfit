@@ -27,7 +27,7 @@ Last updated: 2026-11-09
 - Double-progression suggestions based on completed session history.
 - Goal-based plan generation with equipment, experience level, and calisthenics progressions.
 - Exercise library with 76 movements and bodyweight ladders.
-- Smart Plan editing: swap, remove, or add exercises before starting or saving.
+- Smart Plan editing: reorder, swap, remove, or add exercises before starting or saving.
 - History screen with completed strength sessions, HIIT sessions, and set details.
 - Settings for goal, experience, equipment, units, sound, notifications, install, export, and reset.
 - PWA manifest, service worker, install prompt support, and Capacitor configuration.
@@ -167,6 +167,13 @@ Last updated: 2026-11-09
    - Ladder preview counts, fixed/ratio rest summaries, and 112px timer with no overflow.
    - Saving a finished ladder session to History and persistence after reload.
    - The exact 3-step ladder sequence: `[1]`, `[1,2]`, `[1,2,3]`, `[2,3]`, `[3]`, with one rest after each rung.
+
+## Session 2026-11-09 - Plan exercise reordering
+
+1. Added up/down reorder controls to each Smart Plan exercise.
+   - Reordering switches the generated plan into an edited custom plan.
+   - Saved and started plans preserve the reordered sequence.
+2. Verified with `npm run lint`, `npm run build:pages`, and a headless Chrome test that moved the first exercise down and confirmed the saved plan order matched.
 
 ## Important build/deploy notes
 

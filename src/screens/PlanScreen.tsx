@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
+  ArrowDown,
   ArrowLeftRight,
+  ArrowUp,
   BookmarkPlus,
   ChevronRight,
   Play,
@@ -153,6 +155,16 @@ export function PlanScreen({
 
   const removePlanItem = (index: number) => {
     setCustomPlan(plan.filter((_, itemIndex) => itemIndex !== index))
+  }
+
+  const movePlanItem = (index: number, direction: -1 | 1) => {
+    const target = index + direction
+    if (target < 0 || target >= plan.length) return
+    const next = [...plan]
+    const moved = next[index]
+    next[index] = next[target]
+    next[target] = moved
+    setCustomPlan(next)
   }
 
   const handleShuffle = () => {
@@ -352,6 +364,26 @@ export function PlanScreen({
                   </p>
                 ) : null}
                 <div className="mt-2 flex items-center gap-3">
+                  <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-950/60">
+                    <button
+                      type="button"
+                      disabled={busy || index === 0}
+                      onClick={() => movePlanItem(index, -1)}
+                      className="grid h-7 w-7 place-items-center text-zinc-400 disabled:opacity-30"
+                      aria-label={`Move ${item.exercise.name} up`}
+                    >
+                      <ArrowUp size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy || index === plan.length - 1}
+                      onClick={() => movePlanItem(index, 1)}
+                      className="grid h-7 w-7 place-items-center border-l border-zinc-800 text-zinc-400 disabled:opacity-30"
+                      aria-label={`Move ${item.exercise.name} down`}
+                    >
+                      <ArrowDown size={12} />
+                    </button>
+                  </div>
                   <button
                     type="button"
                     disabled={busy}
