@@ -1,5 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
+  ArrowDown,
+  ArrowUp,
   Check,
   Minus,
   Pause,
@@ -194,6 +196,18 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
         ? current.filter((exerciseId) => exerciseId !== id)
         : [...current, id],
     )
+  }
+
+  const moveExercise = (index: number, direction: -1 | 1) => {
+    setSelectedIds((current) => {
+      const target = index + direction
+      if (target < 0 || target >= current.length) return current
+      const next = [...current]
+      const moved = next[index]
+      next[index] = next[target]
+      next[target] = moved
+      return next
+    })
   }
 
   const handleStart = () => {
@@ -555,6 +569,26 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
                   <p className="truncate text-[10px] text-zinc-500">
                     {EQUIPMENT_LABELS[exercise.equipment]}
                   </p>
+                </div>
+                <div className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/60">
+                  <button
+                    type="button"
+                    disabled={index === 0}
+                    onClick={() => moveExercise(index, -1)}
+                    aria-label={`Move ${exercise.name} up`}
+                    className="grid h-7 w-7 place-items-center text-zinc-400 disabled:opacity-30"
+                  >
+                    <ArrowUp size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={index === selectedExercises.length - 1}
+                    onClick={() => moveExercise(index, 1)}
+                    aria-label={`Move ${exercise.name} down`}
+                    className="grid h-7 w-7 place-items-center border-t border-zinc-800 text-zinc-400 disabled:opacity-30"
+                  >
+                    <ArrowDown size={12} />
+                  </button>
                 </div>
                 <button
                   type="button"

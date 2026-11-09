@@ -36,6 +36,7 @@ Last updated: 2026-11-09
 - Named workout plans that can be saved, started, or added to an active session.
 - Larger animated exercise preview opened from workout, plan, and HIIT screens.
 - HIIT timer with Auto, Custom, and Ladder modes, a 10-second pre-start countdown, 112px active timer, transition warning sound, and voice announcements for upcoming intervals.
+- HIIT exercise order can be changed with up/down controls before starting.
 - Ladder HIIT builds ascending then descending exercise rungs with one rest after each rung, using fixed or 1:N rest:work recovery.
 - Dark and light appearance modes persisted in settings.
 
@@ -174,6 +175,12 @@ Last updated: 2026-11-09
    - Reordering switches the generated plan into an edited custom plan.
    - Saved and started plans preserve the reordered sequence.
 2. Verified with `npm run lint`, `npm run build:pages`, and a headless Chrome test that moved the first exercise down and confirmed the saved plan order matched.
+
+## Session 2026-11-09 - HIIT exercise reordering
+
+1. Added compact up/down reorder controls to the selected HIIT exercises.
+   - Auto, Custom, and Ladder programs use the reordered exercise sequence.
+2. Verified with `npm run lint`, `npm run build:pages`, and a headless Chrome test that moved the first exercise down and confirmed the Custom session work order matched.
 
 ## Important build/deploy notes
 
