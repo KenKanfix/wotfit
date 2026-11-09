@@ -26,7 +26,7 @@ Last updated: 2026-11-09
 - Rest timer with skip/+5 seconds, sound, vibration, notifications, and screen wake lock.
 - Double-progression suggestions based on completed session history.
 - Goal-based plan generation with equipment, experience level, and calisthenics progressions.
-- Exercise library with 70 movements and bodyweight ladders.
+- Exercise library with 76 movements and bodyweight ladders.
 - Smart Plan editing: swap, remove, or add exercises before starting or saving.
 - History screen with completed strength sessions, HIIT sessions, and set details.
 - Settings for goal, experience, equipment, units, sound, notifications, install, export, and reset.
@@ -36,7 +36,7 @@ Last updated: 2026-11-09
 - Named workout plans that can be saved, started, or added to an active session.
 - Larger animated exercise preview opened from workout, plan, and HIIT screens.
 - HIIT timer with Auto, Custom, and Ladder modes, a 10-second pre-start countdown, 112px active timer, transition warning sound, and voice announcements for upcoming intervals.
-- Ladder HIIT builds ascending then descending exercise rungs with fixed or 1:N rest:work recovery.
+- Ladder HIIT builds ascending then descending exercise rungs with one rest after each rung, using fixed or 1:N rest:work recovery.
 - Dark and light appearance modes persisted in settings.
 
 ## Session 2026-11-05 — Icon and Start-button fixes
@@ -160,13 +160,13 @@ Last updated: 2026-11-09
 3. Added Ladder as a third HIIT mode.
    - Uses the selected exercises in order as steps.
    - Builds ascending rungs `[1]`, `[1,2]`, ... `[1..N]`, then descending rungs `[2..N]`, ... `[N]`.
-   - Every exercise in a rung runs for the configured work time; rest follows each rung.
+   - Every exercise in a rung runs for the configured work time; one rest follows each rung.
    - Rest can be fixed seconds or `1:N` rest:work based on the rung's total work time.
    - A 3-step ladder produces 5 rungs; a 6-step ladder produces 11 rungs.
 4. Verified with `npm run lint`, `npm run build:pages`, and headless Chrome tests covering:
    - Ladder preview counts, fixed/ratio rest summaries, and 112px timer with no overflow.
    - Saving a finished ladder session to History and persistence after reload.
-   - The exact 3-step ladder sequence: `[1]`, `[1,2]`, `[1,2,3]`, `[2,3]`, `[3]`.
+   - The exact 3-step ladder sequence: `[1]`, `[1,2]`, `[1,2,3]`, `[2,3]`, `[3]`, with one rest after each rung.
 
 ## Important build/deploy notes
 

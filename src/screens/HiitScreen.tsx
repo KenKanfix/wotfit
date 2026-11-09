@@ -598,8 +598,8 @@ export function HiitScreen({ timer }: { timer: HiitTimer }) {
             <div className="min-w-0">
               <p className="text-sm font-semibold text-zinc-100">Steps</p>
               <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">
-                Uses your selected exercises in order. {selectedExercises.length}{' '}
-                steps = {program.rounds} rungs.
+                Uses your selected exercises in order, ascending then
+                descending. One rest after each rung.
               </p>
             </div>
             <span className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm font-semibold tabular-nums text-zinc-100">
