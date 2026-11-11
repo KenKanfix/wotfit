@@ -45,6 +45,38 @@ export const TECHNIQUE_CUES: Record<string, string> = {
     'Shift your weight toward one arm, keep the other straight, control the descent.',
   'one-arm-push-up':
     'Feet wide, brace hard, keep hips square as you lower and press.',
+  'wide-push-up':
+    'Hands wider than shoulders, elbows track back, lower your chest between your hands.',
+  'diamond-push-up':
+    'Form a diamond with your hands under your chest, keep elbows close, and press to lockout.',
+  'pike-push-up':
+    'Hips high in an inverted V, lower the crown of your head toward the floor, then press back up.',
+  'spiderman-push-up':
+    'As you lower, drive one knee toward the same-side elbow, then return and alternate.',
+  'hindu-push-up':
+    'Sweep from a downward dog into a scooping push-up, then press back to the start.',
+  'typewriter-push-up':
+    'Lower in the middle, shift side to side at the bottom, then press up under control.',
+  'pseudo-planche-push-up':
+    'Lean your shoulders past your hands, keep elbows close, and lower with a straight body.',
+  'clap-push-up':
+    'Push hard enough to lift your hands, clap, and land softly with elbows slightly bent.',
+  'tuck-l-sit':
+    'Press your hands down, tuck your knees to your chest, and lift your hips off the floor.',
+  'one-leg-l-sit':
+    'Extend one leg, keep the other tucked, press through your hands, and keep your chest tall.',
+  'l-sit':
+    'Lock your elbows, push your shoulders down, lift straight legs to hip height, and breathe.',
+  'v-sit':
+    'From an L-sit, lift your legs higher and lean back slightly while keeping your chest tall.',
+  'lying-leg-raise':
+    'Press your lower back into the floor, lift straight legs to vertical, and lower slowly.',
+  'bench-leg-raise':
+    'Grip the bench behind your head, lift straight legs to hip height, and control the descent.',
+  'windshield-wiper':
+    'Hang or lie with your legs raised, rotate them side to side under control, and brace your core.',
+  'dragon-flag':
+    'Hold a sturdy object behind your head, keep your body straight, and lower and raise as one unit.',
   'scapular-pull-up':
     'Start from a dead hang, pull your shoulder blades down without bending elbows.',
   'band-assisted-pull-up':

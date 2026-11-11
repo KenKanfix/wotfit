@@ -330,6 +330,84 @@ export const EXERCISES: Exercise[] = [
     incrementKg: 0,
   }),
 
+  // ── Calisthenics: push-up variations ───────────────────────────────────────
+  ex('wide-push-up', 'Wide push-up', 'push', 'bodyweight', [
+    'chest',
+    'shoulders',
+  ], {
+    level: 1,
+    defaultRestSeconds: 75,
+    repRange: [8, 15],
+    incrementKg: 0,
+  }),
+  ex('diamond-push-up', 'Diamond push-up', 'push', 'bodyweight', [
+    'triceps',
+    'chest',
+  ], {
+    level: 2,
+    defaultRestSeconds: 90,
+    repRange: [6, 12],
+    incrementKg: 0,
+  }),
+  ex('pike-push-up', 'Pike push-up', 'push', 'bodyweight', [
+    'shoulders',
+    'triceps',
+  ], {
+    level: 2,
+    defaultRestSeconds: 90,
+    repRange: [6, 12],
+    incrementKg: 0,
+  }),
+  ex('spiderman-push-up', 'Spiderman push-up', 'push', 'bodyweight', [
+    'chest',
+    'core',
+  ], {
+    level: 2,
+    defaultRestSeconds: 90,
+    repRange: [6, 12],
+    incrementKg: 0,
+  }),
+  ex('hindu-push-up', 'Hindu push-up', 'push', 'bodyweight', [
+    'shoulders',
+    'chest',
+  ], {
+    level: 2,
+    defaultRestSeconds: 90,
+    repRange: [8, 15],
+    incrementKg: 0,
+  }),
+  ex('typewriter-push-up', 'Typewriter push-up', 'push', 'bodyweight', [
+    'chest',
+    'triceps',
+  ], {
+    level: 3,
+    defaultRestSeconds: 120,
+    repRange: [4, 8],
+    incrementKg: 0,
+  }),
+  ex(
+    'pseudo-planche-push-up',
+    'Pseudo planche push-up',
+    'push',
+    'bodyweight',
+    ['shoulders', 'chest'],
+    {
+      level: 3,
+      defaultRestSeconds: 120,
+      repRange: [4, 10],
+      incrementKg: 0,
+    },
+  ),
+  ex('clap-push-up', 'Clap push-up', 'push', 'bodyweight', [
+    'chest',
+    'triceps',
+  ], {
+    level: 3,
+    defaultRestSeconds: 120,
+    repRange: [5, 10],
+    incrementKg: 0,
+  }),
+
   // ── Calisthenics: pull-up progression ──────────────────────────────────────
   ex('dead-hang', 'Dead hang', 'pull', 'bodyweight', ['back'], {
     progressionGroup: 'pull-up',
@@ -534,6 +612,85 @@ export const EXERCISES: Exercise[] = [
     repRange: [5, 10],
     incrementKg: 0,
   }),
+  // ── Calisthenics: L-sit progression ────────────────────────────────────────
+  ex('tuck-l-sit', 'Tuck L-sit', 'core', 'bodyweight', ['core', 'shoulders'], {
+    progressionGroup: 'l-sit',
+    progressionLevel: 1,
+    category: 'calisthenics',
+    defaultRestSeconds: 75,
+    repRange: [10, 20],
+    incrementKg: 0,
+    isTimed: true,
+  }),
+  ex('one-leg-l-sit', 'One-leg L-sit', 'core', 'bodyweight', [
+    'core',
+    'quads',
+  ], {
+    progressionGroup: 'l-sit',
+    progressionLevel: 2,
+    category: 'calisthenics',
+    defaultRestSeconds: 75,
+    repRange: [8, 15],
+    incrementKg: 0,
+    isTimed: true,
+  }),
+  ex('l-sit', 'L-sit', 'core', 'bodyweight', ['core', 'quads'], {
+    progressionGroup: 'l-sit',
+    progressionLevel: 3,
+    level: 2,
+    category: 'calisthenics',
+    defaultRestSeconds: 90,
+    repRange: [10, 30],
+    incrementKg: 0,
+    isTimed: true,
+  }),
+  ex('v-sit', 'V-sit', 'core', 'bodyweight', ['core', 'quads'], {
+    progressionGroup: 'l-sit',
+    progressionLevel: 4,
+    level: 3,
+    category: 'calisthenics',
+    defaultRestSeconds: 120,
+    repRange: [8, 20],
+    incrementKg: 0,
+    isTimed: true,
+  }),
+
+  // ── Calisthenics: leg raise progression ────────────────────────────────────
+  ex('lying-leg-raise', 'Lying leg raise', 'core', 'bodyweight', ['core'], {
+    progressionGroup: 'leg-raise',
+    progressionLevel: 1,
+    category: 'calisthenics',
+    defaultRestSeconds: 60,
+    repRange: [10, 20],
+    incrementKg: 0,
+  }),
+  ex('bench-leg-raise', 'Bench leg raise', 'core', 'bodyweight', ['core'], {
+    progressionGroup: 'leg-raise',
+    progressionLevel: 2,
+    category: 'calisthenics',
+    defaultRestSeconds: 60,
+    repRange: [10, 15],
+    incrementKg: 0,
+  }),
+  ex('windshield-wiper', 'Windshield wiper', 'core', 'bodyweight', ['core'], {
+    progressionGroup: 'leg-raise',
+    progressionLevel: 3,
+    level: 2,
+    category: 'calisthenics',
+    defaultRestSeconds: 75,
+    repRange: [6, 12],
+    incrementKg: 0,
+  }),
+  ex('dragon-flag', 'Dragon flag', 'core', 'bodyweight', ['core'], {
+    progressionGroup: 'leg-raise',
+    progressionLevel: 4,
+    level: 3,
+    category: 'calisthenics',
+    defaultRestSeconds: 90,
+    repRange: [3, 8],
+    incrementKg: 0,
+  }),
+
   ex('crunch', 'Crunch', 'core', 'bodyweight', ['core'], {
     defaultRestSeconds: 60,
     repRange: [12, 20],

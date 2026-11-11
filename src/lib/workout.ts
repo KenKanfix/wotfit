@@ -49,6 +49,7 @@ export async function addExerciseToWorkout(
   exercise: Exercise,
   knownSuggestion?: ProgressionSuggestion,
   restSeconds = exercise.defaultRestSeconds,
+  completed = false,
 ): Promise<boolean> {
   const existing = await db.sets
     .where('[workoutId+exerciseId]')
@@ -67,7 +68,7 @@ export async function addExerciseToWorkout(
       setNumber: index + 1,
       weight: suggestion.weight,
       reps: suggestion.targetReps,
-      completed: false,
+      completed,
       restSeconds,
       createdAt: now + index,
     }),
@@ -81,6 +82,7 @@ export async function addSetToExercise(
   workoutId: string,
   exercise: Exercise,
   restSeconds = exercise.defaultRestSeconds,
+  completed = false,
 ): Promise<void> {
   const sets = await db.sets
     .where('[workoutId+exerciseId]')
@@ -94,7 +96,7 @@ export async function addSetToExercise(
     setNumber: (last?.setNumber ?? sets.length) + 1,
     weight: last?.weight ?? 0,
     reps: last?.reps ?? exercise.repRange[0],
-    completed: false,
+    completed,
     restSeconds,
     createdAt: Date.now(),
   })

@@ -60,6 +60,8 @@ export interface Exercise {
   level: ExperienceLevel
   isTimed?: boolean
   cues?: string
+  isCustom?: boolean
+  createdAt?: number
 }
 
 export interface Workout {

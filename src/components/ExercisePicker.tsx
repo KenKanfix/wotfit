@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getExerciseHistoryMap } from '../lib/history'
 import { buildSessionPlan, EQUIPMENT_LABELS, MUSCLE_LABELS } from '../lib/recommend'
 import type { Exercise, ExerciseSession, Settings } from '../types'
+import { CustomExerciseSheet } from './CustomExerciseSheet'
 import { ExerciseGraphic } from './ExerciseGraphic'
 
 interface Props {
@@ -33,6 +34,7 @@ export function ExercisePicker({
 }: Props) {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
+  const [createOpen, setCreateOpen] = useState(false)
 
   const history = useLiveQuery<Map<string, ExerciseSession>>(
     () =>
@@ -115,6 +117,11 @@ export function ExercisePicker({
     onClose()
   }
 
+  const handleCreated = (exercise: Exercise) => {
+    onPick(exercise)
+    close()
+  }
+
   const renderExercise = (exercise: Exercise, showSuggestedTag = false) => {
     const added = existingIds.has(exercise.id)
     return (
@@ -144,6 +151,11 @@ export function ExercisePicker({
             </p>
             {exercise.isTimed ? (
               <Timer size={12} className="shrink-0 text-zinc-500" />
+            ) : null}
+            {exercise.isCustom ? (
+              <span className="shrink-0 rounded-full bg-zinc-800 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-zinc-400">
+                Custom
+              </span>
             ) : null}
             {showSuggestedTag ? (
               <span className="shrink-0 rounded-full bg-brand-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-300">
@@ -233,6 +245,14 @@ export function ExercisePicker({
                 {item.label}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="ml-auto inline-flex items-center gap-1 rounded-full border border-brand-400/40 bg-brand-400/10 px-3 py-1.5 text-xs font-semibold text-brand-300 active:scale-95"
+            >
+              <Plus size={13} />
+              New
+            </button>
           </div>
         </div>
 
@@ -259,6 +279,14 @@ export function ExercisePicker({
           )}
         </div>
       </div>
+
+      {createOpen ? (
+        <CustomExerciseSheet
+          open
+          onClose={() => setCreateOpen(false)}
+          onSaved={handleCreated}
+        />
+      ) : null}
     </div>
   )
 }

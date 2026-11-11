@@ -6,10 +6,12 @@ import {
   Clock,
   Flame,
   History,
+  Pencil,
   Timer,
   Trash2,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { WorkoutEditSheet } from '../components/WorkoutEditSheet'
 import { db } from '../db'
 import {
   DEFAULT_BODY_WEIGHT_KG,
@@ -76,6 +78,7 @@ function hiitRestLabel(session: HiitSession): string {
 
 export function HistoryScreen({ settings }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Workout | null>(null)
 
   const data = useLiveQuery(async () => {
     const [workouts, hiitSessions] = await Promise.all([
@@ -368,14 +371,29 @@ export function HistoryScreen({ settings }: Props) {
                         </div>
                       ))}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => void handleDelete(detail.workout)}
-                      className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/5 px-2.5 py-1.5 text-[11px] font-semibold text-red-400"
-                    >
-                      <Trash2 size={12} />
-                      Delete workout
-                    </button>
+                    {detail.workout.notes ? (
+                      <p className="mt-2 rounded-xl border border-zinc-800/80 bg-zinc-950/40 px-2.5 py-2 text-[11px] leading-relaxed text-zinc-400">
+                        {detail.workout.notes}
+                      </p>
+                    ) : null}
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditing(detail.workout)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/70 px-2.5 py-1.5 text-[11px] font-semibold text-zinc-200"
+                      >
+                        <Pencil size={12} />
+                        Edit workout
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(detail.workout)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/5 px-2.5 py-1.5 text-[11px] font-semibold text-red-400"
+                      >
+                        <Trash2 size={12} />
+                        Delete workout
+                      </button>
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -383,6 +401,15 @@ export function HistoryScreen({ settings }: Props) {
           })}
         </div>
       )}
+
+      {editing ? (
+        <WorkoutEditSheet
+          open
+          workout={editing}
+          settings={settings}
+          onClose={() => setEditing(null)}
+        />
+      ) : null}
     </div>
   )
 }

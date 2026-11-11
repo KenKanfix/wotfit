@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks'
 import {
   ArrowLeft,
   Bell,
@@ -7,19 +8,23 @@ import {
   Info,
   Minus,
   Moon,
+  Pencil,
   Plus,
   RotateCcw,
   Smartphone,
   Speech,
   Sun,
+  Trash2,
   Volume2,
   VolumeX,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AboutSheet } from '../components/AboutSheet'
+import { CustomExerciseSheet } from '../components/CustomExerciseSheet'
 import { db } from '../db'
 import { APP_AUTHOR, APP_VERSION } from '../lib/app'
 import { DEFAULT_BODY_WEIGHT_KG } from '../lib/calories'
+import { deleteCustomExercise } from '../lib/exerciseLibrary'
 import {
   dateKey,
   formatSeconds,
@@ -30,13 +35,14 @@ import {
   EQUIPMENT_LABELS,
   GOAL_DESCRIPTIONS,
   GOAL_LABELS,
+  MUSCLE_LABELS,
 } from '../lib/recommend'
 import {
   clampRestSeconds,
   DEFAULT_REST_SECONDS,
   REST_STEP_SECONDS,
 } from '../lib/rest'
-import type { Equipment, Goal, Settings } from '../types'
+import type { Equipment, Exercise, Goal, Settings } from '../types'
 
 interface Props {
   settings: Settings
@@ -83,6 +89,16 @@ export function SettingsScreen({ settings, onBack }: Props) {
       window.matchMedia('(display-mode: standalone)').matches,
   )
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [customOpen, setCustomOpen] = useState(false)
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
+
+  const customExercises =
+    useLiveQuery(async () => {
+      const all = await db.exercises.toArray()
+      return all
+        .filter((exercise) => exercise.isCustom)
+        .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+    }, []) ?? []
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -117,6 +133,31 @@ export function SettingsScreen({ settings, onBack }: Props) {
         ? settings.equipment.filter((item) => item !== equipment)
         : [...settings.equipment, equipment],
     })
+  }
+
+  const openCreateExercise = () => {
+    setEditingExercise(null)
+    setCustomOpen(true)
+  }
+
+  const openEditExercise = (exercise: Exercise) => {
+    setEditingExercise(exercise)
+    setCustomOpen(true)
+  }
+
+  const handleDeleteCustom = async (exercise: Exercise) => {
+    const usedSets = await db.sets
+      .where('exerciseId')
+      .equals(exercise.id)
+      .count()
+    const message =
+      usedSets > 0
+        ? `Delete custom exercise "${exercise.name}"? ${usedSets} logged set${
+            usedSets === 1 ? '' : 's'
+          } will stay in history but show as unknown.`
+        : `Delete custom exercise "${exercise.name}"?`
+    if (!window.confirm(message)) return
+    await deleteCustomExercise(exercise.id)
   }
 
   const enableNotifications = async () => {
@@ -302,6 +343,71 @@ export function SettingsScreen({ settings, onBack }: Props) {
             )
           })}
         </div>
+      </section>
+
+      <section className="mt-7">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-zinc-200">Custom exercises</h2>
+            <p className="mt-0.5 text-[11px] text-zinc-500">
+              Add your own movements to the library and picker.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={openCreateExercise}
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-brand-400/40 bg-brand-400/10 px-3 py-1.5 text-xs font-semibold text-brand-300 active:scale-95"
+          >
+            <Plus size={13} />
+            Add
+          </button>
+        </div>
+
+        {customExercises.length === 0 ? (
+          <div className="mt-2.5 rounded-2xl border border-dashed border-zinc-800 px-4 py-6 text-center">
+            <p className="text-xs text-zinc-500">
+              No custom exercises yet. Create one to log anything not in the
+              built-in list.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-2.5 space-y-2">
+            {customExercises.map((exercise) => (
+              <div
+                key={exercise.id}
+                className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-3 py-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-zinc-100">
+                    {exercise.name}
+                  </p>
+                  <p className="truncate text-[11px] text-zinc-500">
+                    {EQUIPMENT_LABELS[exercise.equipment]} ·{' '}
+                    {exercise.primaryMuscles
+                      .map((muscle) => MUSCLE_LABELS[muscle] ?? muscle)
+                      .join(', ')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openEditExercise(exercise)}
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-zinc-500 active:text-brand-300"
+                  aria-label={`Edit ${exercise.name}`}
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteCustom(exercise)}
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-zinc-600 active:text-red-400"
+                  aria-label={`Delete ${exercise.name}`}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="mt-7">
@@ -592,6 +698,18 @@ export function SettingsScreen({ settings, onBack }: Props) {
       <p className="mt-6 text-center text-[10px] leading-relaxed text-zinc-600">
         WOTFit by {APP_AUTHOR} · v{APP_VERSION}. Your data stays on this device.
       </p>
+
+      {customOpen ? (
+        <CustomExerciseSheet
+          key={editingExercise?.id ?? 'new'}
+          open
+          initial={editingExercise}
+          onClose={() => {
+            setCustomOpen(false)
+            setEditingExercise(null)
+          }}
+        />
+      ) : null}
 
       <AboutSheet open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </div>
